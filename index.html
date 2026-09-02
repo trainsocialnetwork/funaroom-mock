@@ -205,6 +205,45 @@
   .duo .ph img{width:100%;height:100%;object-fit:cover}
 
   /* ---- レスポンシブ ---- */
+  /* ---- ハンバーガーメニュー（スマホのみ） ---- */
+  .menuBtn{display:none;background:none;border:none;cursor:pointer;padding:10px;margin:-10px -4px -10px 0}
+  .menuBtn span{display:block;width:22px;height:2.5px;background:var(--ink);border-radius:2px;margin:4.5px 0;transition:transform .2s,opacity .2s}
+  body.menuOpen .menuBtn span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+  body.menuOpen .menuBtn span:nth-child(2){opacity:0}
+  body.menuOpen .menuBtn span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+  /* ---- スマホ用の画面下固定予約ボタン ---- */
+  .mobileReserve{display:none}
+
+  @media(max-width:900px){
+    .menuBtn{display:block}
+    .head1{padding:12px 18px;gap:10px;flex-wrap:nowrap}
+    .head1 > .cta{display:none}
+    .logo .mark{font-size:19px;letter-spacing:.22em}
+    .logo .sub{font-size:8.5px;letter-spacing:.2em}
+    /* メニューは通常は隠し、ハンバーガーで開く */
+    nav.gnav{display:none}
+    body.menuOpen nav.gnav{
+      display:flex;flex-direction:column;gap:2px;
+      position:fixed;left:0;right:0;top:0;bottom:0;z-index:60;
+      background:var(--white);padding:86px 20px 30px;overflow-y:auto;
+    }
+    body.menuOpen nav.gnav a{font-size:16px;padding:13px 14px;border-bottom:1px solid var(--line);border-radius:0}
+    body.menuOpen nav.gnav{padding-top:76px}
+    body.menuOpen header{position:fixed;left:0;right:0;top:0;z-index:70}
+    body.menuOpen .head1{background:var(--white);position:relative;z-index:80}
+    /* 一定量スクロールしたら画面下に予約ボタンを出す（上に戻ると隠れる） */
+    .mobileReserve{
+      display:block;position:fixed;left:16px;right:16px;bottom:14px;z-index:55;
+      text-align:center;padding:15px 24px;font-size:15.5px;
+      transform:translateY(120%);opacity:0;transition:transform .25s,opacity .25s;
+      pointer-events:none;
+    }
+    body.showReserve .mobileReserve{transform:translateY(0);opacity:1;pointer-events:auto}
+    body.menuOpen .mobileReserve{transform:translateY(120%);opacity:0;pointer-events:none}
+  }
+  @media(prefers-reduced-motion:reduce){.mobileReserve,.menuBtn span{transition:none}}
+
   @media(max-width:900px){
     .g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
     .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -235,6 +274,7 @@
     <span class="sp"></span>
     <div class="tel">宮崎県日向市のヨガ・フィットネススタジオ<br><b>TEL 0982-57-3679</b></div>
     <a class="cta" href="#/reserve">体験を予約する</a>
+    <button class="menuBtn" id="menuBtn" aria-label="メニューを開閉"><span></span><span></span><span></span></button>
   </div>
   <nav class="gnav" id="gnav">
     <a href="#/first-visit">はじめての方へ</a>
@@ -941,6 +981,9 @@
   <div class="copyright">© FUN・A・ROOM</div>
 </footer>
 
+<!-- スマホ専用: スクロール後に画面下へ出る予約ボタン（Wixではピン留め+Veloで再現） -->
+<a class="cta mobileReserve" href="#/reserve">体験を予約する（¥1,700〜）</a>
+
 <script>
   /// ハッシュルーター
   ///
@@ -970,6 +1013,27 @@
   }
   window.addEventListener("hashchange", route);
   route();
+
+  /// ハンバーガーメニュー（スマホのみ表示）
+  ///
+  /// リンクを押したらルーターがページを切り替えるので、同時にメニューを閉じる。
+  const menuBtn = document.getElementById("menuBtn");
+  menuBtn.addEventListener("click", () => document.body.classList.toggle("menuOpen"));
+  document.querySelectorAll("nav.gnav a").forEach(a =>
+    a.addEventListener("click", () => document.body.classList.remove("menuOpen")));
+
+  /// スマホ用の画面下固定予約ボタン
+  ///
+  /// ファーストビューを過ぎたら表示し、ページ上部へ戻ったら隠す。
+  /// 予約ナビページではボタン自体が不要なので出さない。
+  function updateReserveBar(){
+    const onReserve = location.hash.replace(/^#/, "") === "/reserve";
+    const show = !onReserve && window.scrollY > 420;
+    document.body.classList.toggle("showReserve", show);
+  }
+  window.addEventListener("scroll", updateReserveBar, {passive: true});
+  window.addEventListener("hashchange", updateReserveBar);
+  updateReserveBar();
 
   /// 予約ナビ
   ///
